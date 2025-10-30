@@ -1,11 +1,113 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <title>Document</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>温馨提示</title>
+    <style>
+        body {
+            background-image: url('0.jpg');
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        .tip-window {
+            position: absolute;
+            background-color: #FFC0CB;
+            font-size: 16px;
+            width: 250px;
+            height: 60px;
+            text-align: center;
+            padding-top: 10px;
+            z-index: 1000;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .tip-window.show {
+            opacity: 1;
+        }
+        .close-btn {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .tip-window p {
+            margin: 0;
+        }
+    </style>
 </head>
 <body>
-    <h1>我果园天天被做局</h1>
-    <p>所以你个哈货在幻想什么</p>
+    <script>
+        const tips = ["保持微笑呀！", "今天也要爱我哟！", "期待下一次见面", "你很棒的！", "我好想你", "早点休息嘛~", "小公主可不能有烦恼哦！", "不要熬夜哦", "今天过得开心嘛"];
+        const bgColors = ["#FFC0CB", "#ADD8E6", "#90EE90", "#FFFFE0", "#D3D3D3"];
+        
+        function showWarmTip() {
+            const tip = tips[Math.floor(Math.random() * tips.length)];
+            const bgColor = bgColors[Math.floor(Math.random() * bgColors.length)];
+            
+            const window = document.createElement('div');
+            window.className = 'tip-window';
+            window.style.backgroundColor = bgColor;
+            
+            const closeBtn = document.createElement('span');
+            closeBtn.className = 'close-btn';
+            closeBtn.textContent = '×';
+            closeBtn.onclick = function() {
+                window.remove();
+            };
+            
+            window.appendChild(closeBtn);
+            
+            const text = document.createElement('p');
+            text.textContent = tip;
+            window.appendChild(text);
+            
+            // 使用CSS中定义的固定尺寸来计算随机位置
+            const windowWidth = 250; // CSS中定义的宽度
+            const windowHeight = 80; // CSS中定义的高度+padding
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            
+            // 计算随机位置，确保窗口完全显示在屏幕内
+            const randomLeft = Math.floor(Math.random() * (screenWidth - windowWidth));
+            const randomTop = Math.floor(Math.random() * (screenHeight - windowHeight));
+            
+            window.style.left = `${randomLeft}px`;
+            window.style.top = `${randomTop}px`;
+            
+            document.body.appendChild(window);
+            
+            // 渐显效果
+            setTimeout(() => {
+                window.classList.add('show');
+            }, 10);
+            
+            // 一段时间后自动关闭
+            setTimeout(() => {
+                window.remove();
+            }, 5000); // 5秒后自动关闭
+        }
+        
+        function createWarmTips() {
+            setInterval(function() {
+                showWarmTip();
+            }, 1000); // 每1秒创建一个新的窗口
+        }
+        
+        window.onload = function() {
+            createWarmTips();
+        };
+    </script>
 </body>
+
 
 </html>
