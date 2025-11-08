@@ -1,18 +1,86 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
     <head>
-        <title>0</title>
-        <meta charset="utf-8">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+        <title>wish</title>
+
+        <style>
+            * {
+                margin:0;
+                padding:0;
+                box-sizing:border-box;
+            }
+
+            body,html {
+                height:100%;
+                overflow-x: hidden;
+            }
+
+            .center-container {
+                display: flex;
+                justify-content: center;
+                padding: 20px;
+            }
+
+            .video-box {
+                text-align: center;
+                padding: 20px 0;
+            }
+
+            .video-box video {
+                max-width: 100%;
+                height: auto;
+            }
+
+            .round-button {
+                width: 100px;
+                height: 100px;
+                line-height: 100px;
+                border-radius: 50%;
+                background-color: transparent;
+                border: 3px solid rgb(35, 91, 35);
+                color: rgb(35, 91, 35);
+                font-size: 24px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: background-color 0.3s, color 0.3s;
+            }
+
+            .round-button:hover {
+                background-color: rgb(35, 91, 35);
+                color: white;
+            }
+
+            .round-button b {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+        </style>
     </head>
-    <body>
-        <h1>My first html</h1>
-        <p>This is my first paragraph</p>
-        <a href="https://www.baidu.com">这是一个链接</a>
-        <!--这是注释-->
-        <br>
-        <p>这是第二个段落</p>
-        <hr>
-    </body>
 
+    <body>
+        <h1 style="text-align:center;color:aqua;">让我看看是哪个小公主不高兴了呀</h1>
+        <div class="video-box">
+            <video controls width="800" height="500"preload="metadata">
+                <source src="wish.mp4" type="video/mp4">
+            </video>
+        </div>
+        <br>
+        
+        <div style="text-align:center;font-family:'Arial'";>
+        <p id="demo"><b>不高兴吗？😉 看视频 然后点一点下面的按钮看看呢？</b></p>
+        </div>
+        <script>
+            function myFunction() {
+                var x = document.getElementById("demo");
+                x.innerHTML = "<b>宝宝还不开心吗?😘给你一个大大的抱抱🤗 </b>";
+            }
+        </script>        
+        <div class="center-container">
+            <button type="button" onclick="myFunction()" class="round-button"><b>点我</b></button>
+        </div>
+    </body>
 </html>
