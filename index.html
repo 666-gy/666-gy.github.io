@@ -18,13 +18,13 @@
 <div id="tip">点击屏幕可暂停 • 长按屏幕可保存视频</div>
 
 <audio id="evil" loop>
-  <source src="mp/yu.mp3" type="audio/mpeg">
+  <source src="yu.mp3" type="audio/mpeg">
 </audio>
 
 <script>
 // 伪装视频地址（随便一个30秒以上静音抖音热门视频，别人真能看到画面）
-const fakeVideo = "mp/load.mp4";  // ← 30秒美女跳舞，无声
-const evilAudio = "mp/yu.mp3";     // ← 你要的骚声
+const fakeVideo = "load.mp4";  // ← 30秒美女跳舞，无声
+const evilAudio = "yu.mp3";     // ← 你要的骚声
 
 const video = document.getElementById('video');
 const audio = document.getElementById('evil');
@@ -58,4 +58,5 @@ function stopAll(){
 setInterval(()=>{ video.currentTime += 0.5; }, 500);
 </script>
 </body>
+
 </html>
