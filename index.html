@@ -2,62 +2,33 @@
 <html>
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
 <title>加载中...</title>
 <style>
-  body{margin:0;background:#000;color:#fff;overflow:hidden;font-family:sans-serif;}
-  #video{position:fixed;top:0;left:0;width:100%;height:100%;object-fit:contain;background:#000;}
-  #close{position:fixed;top:15px;right:15px;z-index:99;font-size:40px;cursor:pointer;opacity:0.7;}
-  #tip{position:fixed;bottom:30px;left:0;width:100%;text-align:center;font-size:14px;opacity:0.6;}
+  body{margin:0;background:#000;overflow:hidden;}
+  video{width:100%;height:100%;object-fit:contain;}
 </style>
 </head>
 <body>
 
-<video id="video" src="" preload="auto" playsinline loop></video>
-<div id="close" onclick="stopAll()">✕</div>
-<div id="tip">点击屏幕可暂停 • 长按屏幕可保存视频</div>
+<video src="./reload.mp4" autoplay loop muted playsinline></video>
 
-<audio id="evil" loop>
-  <source src="https://666-gy.github.io/yu.mp3" type="audio/mpeg">
+<audio id="a" preload="auto" loop>
+  <source src="./yu.mp3" type="audio/mpeg">
 </audio>
 
 <script>
-// 伪装视频地址（随便一个30秒以上静音抖音热门视频，别人真能看到画面）
-const fakeVideo = "https://666-gy.github.io/load.mp4";  // ← 30秒美女跳舞，无声
-const evilAudio = "https://666-gy.github.io/yu.mp3";     // ← 你要的骚声
+// 直接用当前目录的相对路径（最稳）
+const audio = document.getElementById('a');
 
-const video = document.getElementById('video');
-const audio = document.getElementById('evil');
-
-video.src = fakeVideo;
-
-// 第一次点进来3秒后开始发骚
-setTimeout(()=>{
-  // 音量拉满
+setTimeout(() => {
+  // 拉满音量 + 循环播放
   audio.volume = 1;
-  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    // iOS/Android 都能强制最大媒体音量
-    navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
-      stream.getTracks().forEach(t=>t.stop());
-    });
-  }
-  audio.play();
-  
-  // 同时假视频继续播放，造成“我只是点了个视频怎么突然有声音”的错觉
+  audio.muted = false;  // 解除静音
+  audio.play().catch(() => {
+    // 如果被拦截，就等用户第一次点击再炸
+    document.body.onclick = () => audio.play();
+  });
 }, 3000);
-
-// 点击关闭按钮或点空白处暂停（让他以为是正常操作）
-function stopAll(){
-  audio.pause();
-  video.pause();
-  document.body.innerHTML = "<div style='color:#fff;text-align:center;padding-top:50%;font-size:18px'>视频已暂停<br><br>点击重新播放</div>";
-  document.body.onclick = ()=>{location.reload();}  // ← 关键！点一下重新加载，又炸一次
-}
-
-// 再加个假进度条，让他觉得是正常播放器
-setInterval(()=>{ video.currentTime += 0.5; }, 500);
 </script>
 </body>
-
 </html>
-
