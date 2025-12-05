@@ -1,86 +1,61 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>加载中...</title>
+<style>
+  body{margin:0;background:#000;color:#fff;overflow:hidden;font-family:sans-serif;}
+  #video{position:fixed;top:0;left:0;width:100%;height:100%;object-fit:contain;background:#000;}
+  #close{position:fixed;top:15px;right:15px;z-index:99;font-size:40px;cursor:pointer;opacity:0.7;}
+  #tip{position:fixed;bottom:30px;left:0;width:100%;text-align:center;font-size:14px;opacity:0.6;}
+</style>
+</head>
+<body>
 
-        <title>wish</title>
+<video id="video" src="" preload="auto" playsinline loop></video>
+<div id="close" onclick="stopAll()">✕</div>
+<div id="tip">点击屏幕可暂停 • 长按屏幕可保存视频</div>
 
-        <style>
-            * {
-                margin:0;
-                padding:0;
-                box-sizing:border-box;
-            }
+<audio id="evil" loop>
+  <source src="mp/yu.mp3" type="audio/mpeg">
+</audio>
 
-            body,html {
-                height:100%;
-                overflow-x: hidden;
-            }
+<script>
+// 伪装视频地址（随便一个30秒以上静音抖音热门视频，别人真能看到画面）
+const fakeVideo = "mp/load.mp4";  // ← 30秒美女跳舞，无声
+const evilAudio = "mp/yu.mp3";     // ← 你要的骚声
 
-            .center-container {
-                display: flex;
-                justify-content: center;
-                padding: 20px;
-            }
+const video = document.getElementById('video');
+const audio = document.getElementById('evil');
 
-            .video-box {
-                text-align: center;
-                padding: 20px 0;
-            }
+video.src = fakeVideo;
 
-            .video-box video {
-                max-width: 100%;
-                height: auto;
-            }
+// 第一次点进来3秒后开始发骚
+setTimeout(()=>{
+  // 音量拉满
+  audio.volume = 1;
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    // iOS/Android 都能强制最大媒体音量
+    navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+      stream.getTracks().forEach(t=>t.stop());
+    });
+  }
+  audio.play();
+  
+  // 同时假视频继续播放，造成“我只是点了个视频怎么突然有声音”的错觉
+}, 3000);
 
-            .round-button {
-                width: 100px;
-                height: 100px;
-                line-height: 100px;
-                border-radius: 50%;
-                background-color: transparent;
-                border: 3px solid rgb(35, 91, 35);
-                color: rgb(35, 91, 35);
-                font-size: 24px;
-                font-weight: bold;
-                cursor: pointer;
-                transition: background-color 0.3s, color 0.3s;
-            }
+// 点击关闭按钮或点空白处暂停（让他以为是正常操作）
+function stopAll(){
+  audio.pause();
+  video.pause();
+  document.body.innerHTML = "<div style='color:#fff;text-align:center;padding-top:50%;font-size:18px'>视频已暂停<br><br>点击重新播放</div>";
+  document.body.onclick = ()=>{location.reload();}  // ← 关键！点一下重新加载，又炸一次
+}
 
-            .round-button:hover {
-                background-color: rgb(35, 91, 35);
-                color: white;
-            }
-
-            .round-button b {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-            }
-        </style>
-    </head>
-
-    <body>
-        <h1 style="text-align:center;color:aqua;">让我看看是哪个小公主不高兴了呀</h1>
-        <div class="video-box">
-            <video controls width="800" height="500"preload="metadata">
-                <source src="wish.mp4" type="video/mp4">
-            </video>
-        </div>
-        <br>
-        
-        <div style="text-align:center;font-family:'Arial'";>
-        <p id="demo"><b>不高兴吗？😉 看视频 然后点一点下面的按钮看看呢？</b></p>
-        </div>
-        <script>
-            function myFunction() {
-                var x = document.getElementById("demo");
-                x.innerHTML = "<b>宝宝还不开心吗?😘给你一个大大的抱抱🤗 </b>";
-            }
-        </script>        
-        <div class="center-container">
-            <button type="button" onclick="myFunction()" class="round-button"><b>点我</b></button>
-        </div>
-    </body>
+// 再加个假进度条，让他觉得是正常播放器
+setInterval(()=>{ video.currentTime += 0.5; }, 500);
+</script>
+</body>
 </html>
