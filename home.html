@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+
+{% block title %}首页{% endblock %}
+
+{% block content %}
+{% if current_user.is_authenticated %}
+<div class="container mt-5">
+    <!-- 操作按钮区域 -->
+    <div class="form-container mb-5">
+        <h2 class="text-center mb-4">购货人管理系统</h2>
+        
+        <!-- 主要操作按钮 -->
+        <div class="d-flex flex-wrap justify-content-center mb-4">
+            <button id="addCustomerBtn" class="btn btn-primary mr-4" style="min-width: 180px; padding: 10px 15px;">添加购货人</button>
+            <button id="unpaidBtn" class="btn btn-warning mr-4" style="min-width: 180px; padding: 10px 15px;">查询未付款的购货人</button>
+            <button id="calculatorBtn" class="btn btn-info mr-4" style="min-width: 180px; padding: 10px 15px;">在线计算器</button>
+            <form action="{{ url_for('clear_database') }}" method="POST" style="display: inline;">
+                <button type="submit" class="btn btn-danger" style="min-width: 180px; padding: 10px 15px;">清空数据库</button>
+            </form>
+        </div>
+        
+        <!-- 数据库操作按钮 -->
+        <div class="d-flex flex-wrap justify-content-center mb-4">
+            <button id="createDbBtn" class="btn btn-success mr-4" style="min-width: 180px; padding: 10px 15px;">新建单项目数据库</button>
+            <button id="openDbBtn" class="btn btn-secondary" style="min-width: 180px; padding: 10px 15px;">打开单项目数据库</button>
+        </div>
+        
+        <!-- 搜索栏 -->
+        <div class="d-flex justify-content-center">
+            <div class="input-group" style="max-width: 500px;">
+                <input type="text" id="searchInput" class="form-control" placeholder="输入昵称关键词搜索购货人">
+                <div class="input-group-append">
+                    <button id="searchBtn" class="btn btn-outline-secondary" type="button" style="padding: 0 15px;">搜索</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 购货人列表 -->
+    <div class="form-container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="text-center flex-grow-1 m-0">购货人列表</h3>
+            <div class="text-right">
+                <span class="badge badge-info">当前数据库: {{ current_db.split('/')[-1] if '/' in current_db else current_db }}</span>
+                <span class="badge badge-secondary ml-2">项目: {{ current_project }}</span>
+            </div>
+        </div>
+        <div class="table-responsive" style="max-height: 300px; overflow-y: auto; overflow-x: auto;">
+            <table class="table table-hover" style="width: 100%; min-width: 1400px;">
+                <thead class="thead-light sticky-top bg-light">
+                    <tr>
+                        <th>昵称</th>
+                        <th>电话</th>
+                        <th>购货时间</th>
+                        <th>购货项目及付款送货状态</th>
+                        <th>应付钱数</th>
+                        <th>差额</th>
+                        <th>差货</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if customers %}
+                        {% for customer in customers %}
+                        <tr>
+                            <td>{{ customer.nickname }}</td>
+                            <td>{{ customer.phone }}</td>
+                            <td>{{ customer.purchase_time }}</td>
+                            <td><span class="purchase-items">{{ customer.purchase_items }}</span></td>
+                            <td><span class="total-amount">0</span></td>
+                            <td class="balance-amount">{{ customer.balance }}</td>
+                            <td class="delivery-balance">0</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary edit-btn" data-id="{{ customer.id }}">修改</button>
+                                <form action="{{ url_for('delete_customer', customer_id=customer.id) }}" method="POST" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger ml-1">删除</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center">暂无购货人信息</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- 价位设置按钮 -->
+    <div class="form-container mt-5">
+        <h3 class="text-center mb-4">今日价位设置</h3>
+        <div class="d-flex flex-wrap justify-content-center">
+            <button id="麻绳价位Btn" class="btn btn-outline-primary mr-4 mb-2" style="min-width: 150px;">今日麻绳价位</button>
+            <button id="豆粕价位Btn" class="btn btn-outline-primary mb-2" style="min-width: 150px;">今日豆粕价位</button>
+        </div>
+    </div>
+</div>
+
+<!-- 价位输入弹窗 -->
+<div id="priceModal" class="password-modal" style="display: none;">
+    <div class="password-modal-content" style="max-width: 400px;">
+        <span class="close-price close">&times;</span>
+        <h3 class="text-center mb-4" id="priceModalTitle">设置价位</h3>
+        <form id="priceForm">
+            <div class="form-group">
+                <label for="priceInput">价位（元）</label>
+                <div class="mb-2 text-muted" id="originalPrice">原价位：0元</div>
+                <input type="number" class="form-control" id="priceInput" step="0.01" min="0" required>
+            </div>
+            <input type="hidden" id="priceType" value="">
+            <button type="submit" class="btn btn-primary btn-block">确认设置</button>
+        </form>
+    </div>
+</div>
+
+<!-- 新建单项目数据库弹窗 -->
+<div id="createDbModal" class="password-modal" style="display: none;">
+    <div class="password-modal-content" style="max-width: 400px;">
+        <span class="close-create-db close">&times;</span>
+        <h3 class="text-center mb-4">新建单项目数据库</h3>
+        <form id="createDbForm">
+            <!-- 选择项目 -->
+            <div class="form-group">
+                <label>选择项目</label>
+                <div class="custom-control custom-radio">
+                    <input type="radio" class="custom-control-input" name="dbProject" id="dbProjectHemp" value="麻绳" checked>
+                    <label class="custom-control-label" for="dbProjectHemp">麻绳</label>
+                </div>
+                <div class="custom-control custom-radio">
+                    <input type="radio" class="custom-control-input" name="dbProject" id="dbProjectSoybean" value="豆粕">
+                    <label class="custom-control-label" for="dbProjectSoybean">豆粕</label>
+                </div>
+            </div>
+            
+            <!-- 数据库名称 -->
+            <div class="form-group">
+                <label for="dbNameInput">数据库名称</label>
+                <input type="text" class="form-control" id="dbNameInput" placeholder="请输入数据库名称" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">确认新建</button>
+        </form>
+    </div>
+</div>
+
+<!-- 打开单项目数据库弹窗 -->
+<div id="openDbModal" class="password-modal" style="display: none;">
+    <div class="password-modal-content" style="max-width: 400px;">
+        <span class="close-open-db close">&times;</span>
+        <h3 class="text-center mb-4">打开单项目数据库</h3>
+        <form id="openDbForm">
+            <div class="form-group">
+                <label for="dbSelect">选择数据库</label>
+                <select class="form-control" id="dbSelect" required>
+                    <option value="">请选择数据库</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">确认打开</button>
+        </form>
+    </div>
+</div>
+
+<!-- 修改购货人弹窗 -->
+<div id="editCustomerModal" class="password-modal" style="display: none;">
+    <div class="password-modal-content" style="max-width: 600px;">
+        <span class="close-edit-customer close">&times;</span>
+        <h3 class="text-center mb-4">修改购货人</h3>
+        <form id="editCustomerForm" action="{{ url_for('edit_customer') }}" method="POST">
+            <input type="hidden" id="editCustomerId" name="customer_id" value="">
+            
+            <!-- 基本信息 -->
+            <div class="form-group">
+                <label for="editNickname">昵称</label>
+                <input type="text" class="form-control" id="editNickname" name="nickname" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="editPhone">电话</label>
+                <input type="text" class="form-control" id="editPhone" name="phone" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="editPurchaseTime">购货时间</label>
+                <input type="date" class="form-control" id="editPurchaseTime" name="purchaseTime" required>
+            </div>
+            
+            <!-- 隐藏字段用于存储购买项目 -->
+            <input type="hidden" id="editPurchaseItems" name="purchaseItems" value="无">
+            <input type="hidden" id="editBalance" name="balance" value="0">
+            
+            <!-- 购买项目及付款送货状态 -->
+            <div class="form-group">
+                <label>购买项目及付款送货状态</label>
+                
+                <!-- 麻绳 -->
+                <div class="mb-3" id="edit-project-麻绳-container">
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input" id="edit麻绳">
+                        <label class="custom-control-label" for="edit麻绳">麻绳</label>
+                    </div>
+                    <div class="ml-4 mt-2" id="edit麻绳-details" style="display: none;">
+                        <div class="form-group">
+                            <label for="edit麻绳吨数">吨数</label>
+                            <input type="number" class="form-control" id="edit麻绳吨数">
+                        </div>
+                        
+                        <!-- 付款状态 -->
+                        <div class="form-group">
+                            <div class="d-flex justify-content-between align-items-center cursor-pointer" data-toggle="collapse" data-target="#edit麻绳付款状态">
+                                <label>付款状态</label>
+                                <span class="toggle-icon">▼</span>
+                            </div>
+                            <div id="edit麻绳付款状态" class="collapse ml-4 mt-2">
+                                <div class="custom-control custom-radio">
+                                    <input type="radio" class="custom-control-input" name="edit麻绳付款状态" id="edit麻绳已付款">
+                                    <label class="custom-control-label" for="edit麻绳已付款">已付款</label>
+                                </div>
+                                <div class="custom-control custom-radio">
+                                    <input type="radio" class="custom-control-input" name="edit麻绳付款状态" id="edit麻绳未付款">
+                                    <label class="custom-control-label" for="edit麻绳未付款">未付款</label>
+                                </div>
+                                <div class="custom-control custom-radio">
+                                    <input type="radio" class="custom-control-input" name="edit麻绳付款状态" id="edit麻绳部分付款">
+                                    <label class="custom-control-label" for="edit麻绳部分付款">部分付款</label>
+                                </div>
+                                <div id="edit麻绳部分付款金额" class="ml-4 mt-2" style="display: none;">
+                                    <input type="number" id="edit麻绳部分付款金额输入" class="form-control" placeholder="本次付款钱数">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 送货状态 -->
+                        <div class="form-group">
+                            <div class="d-flex justify-content-between align-items-center cursor-pointer" data-toggle="collapse" data-target="#edit麻绳送货状态">
+                                <label>送货状态</label>
+                                <span class="toggle-icon">▼</span>
+                            </div>
+                            <div id="edit麻绳送货状态" class="collapse ml-4 mt-2">
+                                <div class="custom-control custom-radio">
+                                    <input type="radio" class="custom-control-input" name="edit麻绳送货状态" id="edit麻绳已送货">
+                                    <label class="custom-control-label" for="edit麻绳已送货">已送达</label>
+                                </div>
+                                <div class="custom-control custom-radio">
+                                    <input type="radio" class="custom-control-input" name="edit麻绳送货状态" id="edit麻绳未送货">
+                                    <label class="custom-control-label" for="edit麻绳未送货">未开始送</label>
+                                </div>
+                                <div class="custom-control custom-radio">
+                                    <input type="radio" class="custom-control-input" name="edit麻绳送货状态" id="edit麻绳部分送货">
+                                    <label class="custom-control-label" for="edit麻绳部分送货">部分送达</label>
+                                </div>
+                                <div id="edit麻绳部分送货数量" class="ml-4 mt-2" style="display: none;">
+                                    <input type="number" id="edit麻绳部分送货数量输入" class="form-control" placeholder="本次送货数量">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 豆粕 -->
+                <div class="mb-3" id="edit-project-豆粕-container">
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input" id="edit豆粕">
+                        <label class="custom-control-label" for="edit豆粕">豆粕</label>
+                    </div>
+                    <div class="ml-4 mt-2" id="edit豆粕-details" style="display: none;">
+                        <div class="form-group">
+                            <label for="edit豆粕吨数">吨数</label>
+                            <input type="number" class="form-control" id="edit豆粕吨数">
+                        </div>
+                        
+                        <!-- 付款状态 -->
+                        <div class="form-group">
+                            <div class="d-flex justify-content-between align-items-center cursor-pointer" data-toggle="collapse" data-target="#edit豆粕付款状态">
+                                <label>付款状态</label>
+                                <span class="toggle-icon">▼</span>
+                            </div>
+                            <div id="edit豆粕付款状态" class="collapse ml-4 mt-2">
+                                <div class="custom-control custom-radio">
+                                    <input type="radio" class="custom-control-input" name="edit豆粕付款状态" id="edit豆粕已付款">
+                                    <label class="custom-control-label" for="edit豆粕已付款">已付款</label>
+                                </div>
+                                <div class="custom-control custom-radio">
+                                    <input type="radio" class="custom-control-input" name="edit豆粕付款状态" id="edit豆粕未付款">
+                                    <label class="custom-control-label" for="edit豆粕未付款">未付款</label>
+                                </div>
+                                <div class="custom-control custom-radio">
+                                    <input type="radio" class="custom-control-input" name="edit豆粕付款状态" id="edit豆粕部分付款">
+                                    <label class="custom-control-label" for="edit豆粕部分付款">部分付款</label>
+                                </div>
+                                <div id="edit豆粕部分付款金额" class="ml-4 mt-2" style="display: none;">
+                                    <input type="number" id="edit豆粕部分付款金额输入" class="form-control" placeholder="本次付款钱数">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 送货状态 -->
+                        <div class="form-group">
+                            <div class="d-flex justify-content-between align-items-center cursor-pointer" data-toggle="collapse" data-target="#edit豆粕送货状态">
+                                <label>送货状态</label>
+                                <span class="toggle-icon">▼</span>
+                            </div>
+                            <div id="edit豆粕送货状态" class="collapse ml-4 mt-2">
+                                <div class="custom-control custom-radio">
+                                    <input type="radio" class="custom-control-input" name="edit豆粕送货状态" id="edit豆粕已送货">
+                                    <label class="custom-control-label" for="edit豆粕已送货">已送达</label>
+                                </div>
+                                <div class="custom-control custom-radio">
+                                    <input type="radio" class="custom-control-input" name="edit豆粕送货状态" id="edit豆粕未送货">
+                                    <label class="custom-control-label" for="edit豆粕未送货">未开始送</label>
+                                </div>
+                                <div class="custom-control custom-radio">
+                                    <input type="radio" class="custom-control-input" name="edit豆粕送货状态" id="edit豆粕部分送货">
+                                    <label class="custom-control-label" for="edit豆粕部分送货">部分送达</label>
+                                </div>
+                                <div id="edit豆粕部分送货数量" class="ml-4 mt-2" style="display: none;">
+                                    <input type="number" id="edit豆粕部分送货数量输入" class="form-control" placeholder="本次送货数量">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">确认修改</button>
+        </form>
+    </div>
+</div>
+{% else %}
+<div class="home-container">
+    <div class="form-container">
+        <h2 class="text-center mb-4">购货人管理系统</h2>
+        <div class="text-center">
+            <p class="lead">请登录或注册以访问系统。</p>
+            <div class="d-flex justify-content-center mt-4">
+                <a class="btn btn-primary mr-3" href="{{ url_for('login') }}" role="button">登录</a>
+                <a class="btn btn-secondary" href="{{ url_for('register') }}" role="button">注册</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
