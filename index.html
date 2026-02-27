@@ -30,7 +30,7 @@
             margin-bottom: 5px;
             font-weight: bold;
         }
-        input {
+        input, select {
             width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
@@ -72,12 +72,39 @@
         </div>
         <div class="input-group">
             <label for="name">名字</label>
-            <input type="text" id="name" placeholder="请输入名字">
+            <select id="name">
+                <option value="">请选择名字</option>
+                <option value="圣女">圣女</option>
+                <option value="艾可">艾可</option>
+                <option value="幻术">幻术</option>
+                <option value="女鬼">女鬼</option>
+                <option value="米奇">米奇</option>
+                <option value="德芙">德芙</option>
+                <option value="雇佣兵">雇佣兵</option>
+                <option value="盾卫">盾卫</option>
+                <option value="蝴蝶">蝴蝶</option>
+                <option value="师姐">师姐</option>
+                <option value="学妹">学妹</option>
+                <option value="命石">命石</option>
+                <option value="汽车">汽车</option>
+                <option value="渺">渺</option>
+                <option value="水忍">水忍</option>
+                <option value="赵凯">赵凯</option>
+                <option value="骇客">骇客</option>
+                <option value="云朵">云朵</option>
+                <option value="龙虾">龙虾</option>
+                <option value="茶叶">茶叶</option>
+                <option value="魔术">魔术</option>
+                <option value="狮子">狮子</option>
+                <option value="机器人">机器人</option>
+                <option value="泡泡">泡泡</option>
+                <option value="团子">团子</option>
+            </select>
         </div>
         <button onclick="calculateMaxCurrency()">计算</button>
         <div class="result" id="result">
             <h3>计算结果</h3>
-            <p id="maxCurrency">请输入初始货币和名字，然后点击计算按钮</p>
+            <p id="maxCurrency">请输入初始货币并选择名字，然后点击计算按钮</p>
         </div>
     </div>
 
@@ -113,7 +140,7 @@
 
         function calculateMaxCurrency() {
             const initialCurrency = parseFloat(document.getElementById('initialCurrency').value);
-            const name = document.getElementById('name').value.trim();
+            const name = document.getElementById('name').value;
             const resultElement = document.getElementById('maxCurrency');
 
             if (isNaN(initialCurrency) || initialCurrency < 0) {
@@ -122,7 +149,7 @@
             }
 
             if (!name) {
-                resultElement.textContent = "请输入名字";
+                resultElement.textContent = "请选择名字";
                 return;
             }
 
